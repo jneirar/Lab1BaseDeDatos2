@@ -2,30 +2,82 @@
 #include <fstream>
 #include <cstring>
 #include <climits>
+#include <string>
+#include <vector>
 using namespace std;
 
-class Alumno
-{
+class Alumno{
 public:
-	char Nombre [12];
-	char Apellidos [12];	
+	char codigo [5];
+	char nombre [11];
+	char apellidos [20];
+	char carrera [15];
 };
 
-ostream & operator << (ostream & stream, Alumno & p)
-{	
-	stream << p.Nombre;
-	stream << p.Apellidos;
+ostream & operator << (ostream & stream, Alumno & p){
+	stream << p.codigo;
+	stream << p.nombre;
+	stream << p.apellidos;
+	stream << p.carrera;
 	stream << "\n";
 	stream << flush;
 	return stream;
 }
 
-istream & operator >> (istream & stream, Alumno & p)
-{	
-	stream.get(p.Nombre, 12);		
-	stream.get(p.Apellidos, 12);	
+istream & operator >> (istream & stream, Alumno & p){
+	stream.get(p.codigo, 5);
+	stream.get(p.nombre, 11);
+	stream.get(p.apellidos, 20);
+	stream.get(p.carrera, 15);
 	return stream;
 }
+
+class FixedRecord{
+private:
+	string fileName;
+public:
+	FixedRecord(string fileName){
+		this->fileName = fileName;
+	}
+	vector<Alumno> load(){
+		vector<Alumno> records;
+
+		ifstream inFile;
+		inFile.open(this->fileName);
+		
+		Alumno record;
+		/*inFile.read(record.codigo, 5);
+		inFile.read(record.nombre, 11);
+		inFile.read(record.apellidos, 20);
+		inFile.read(record.carrera, 15);*/
+		
+		inFile >> record;
+		cout << record.codigo << "|\n";
+		cout << record.nombre << "|\n";
+		cout << record.apellidos << "|\n";
+		cout << record.carrera << "|\n";
+		
+		cin.get();
+		inFile >> record;
+		cout << record.codigo << "|\n";
+		cout << record.nombre << "|\n";
+		cout << record.apellidos << "|\n";
+		cout << record.carrera << "|\n";
+		
+		inFile.close();
+		
+		return records;
+	}
+	void add(Alumno record){
+		
+	}
+	Alumno readRecord(int pos){
+		Alumno a;
+		return a;
+	}
+};
+
+
 
 void readFromConsole(char buffer[], int size){
 	string temp;			
@@ -36,8 +88,15 @@ void readFromConsole(char buffer[], int size){
 	cin.clear();
 }
 
-int main()
-{
+int main(){
+	string fileName = "datos1.txt";
+	FixedRecord fixedRecord(fileName);
+	vector<Alumno> records = fixedRecord.load();
+	cout << records.size() << endl;
+	for(auto A : records)
+		cout << A.codigo << " - " << A.nombre << " - " << A.apellidos << " - " << A.carrera << "\n";
+
+	/*
 	ofstream outFile;
 	ifstream inFile;
 
@@ -57,6 +116,6 @@ int main()
 	cout << person2.Nombre;
 	cout << person2.Apellidos;
 	cin.get();
-	cout << endl;
+	cout << endl;*/
 	return 0;
 }

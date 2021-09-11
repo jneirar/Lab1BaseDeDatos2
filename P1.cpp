@@ -1,11 +1,9 @@
 #include <iostream>
 #include <fstream>
-#include <cstring>
-#include <climits>
-#include <string>
 #include <vector>
-using namespace std;
 
+using namespace std;
+#define test codigo
 class Alumno{
 public:
 	char codigo [5];
@@ -41,29 +39,36 @@ public:
 	}
 	vector<Alumno> load(){
 		vector<Alumno> records;
-
 		ifstream inFile;
 		inFile.open(this->fileName);
-		
 		Alumno record;
-		/*inFile.read(record.codigo, 5);
-		inFile.read(record.nombre, 11);
-		inFile.read(record.apellidos, 20);
-		inFile.read(record.carrera, 15);*/
+		inFile.get(record.codigo, sizeof(record.codigo)+1);
+		inFile.get(record.nombre, sizeof(record.nombre)+1);
+		inFile.get(record.apellidos, sizeof(record.apellidos)+1);
+		inFile.get(record.carrera, sizeof(record.carrera)+1);
 		
-		inFile >> record;
-		cout << record.codigo << "|\n";
-		cout << record.nombre << "|\n";
-		cout << record.apellidos << "|\n";
-		cout << record.carrera << "|\n";
+		string enter;
+		getline(inFile, enter);
+		cout << "enter: " << enter << " -> " << sizeof(enter) << "\n";
+
+
+		string data;
+		getline(inFile, data);
+		cout << data << "\n";
+		/*
+		Alumno record2;
+		inFile.get(record2.codigo, sizeof(record2.codigo)+1);
+		inFile.get(record2.nombre, sizeof(record2.nombre)+1);
+		inFile.get(record2.apellidos, sizeof(record2.apellidos)+1);
+		inFile.get(record2.carrera, sizeof(record2.carrera)+1);
 		
-		cin.get();
-		inFile >> record;
-		cout << record.codigo << "|\n";
-		cout << record.nombre << "|\n";
-		cout << record.apellidos << "|\n";
-		cout << record.carrera << "|\n";
+		cout << record2.test << "\n";
+		cout << sizeof record2.test << "\n";
+		for(int i=0; i<sizeof record2.test; i++){
+			cout << i << " : " << record2.test[i] << "\n";
+		}
 		
+*/
 		inFile.close();
 		
 		return records;
@@ -92,7 +97,7 @@ int main(){
 	string fileName = "datos1.txt";
 	FixedRecord fixedRecord(fileName);
 	vector<Alumno> records = fixedRecord.load();
-	cout << records.size() << endl;
+	cout << "\n" << records.size() << endl;
 	for(auto A : records)
 		cout << A.codigo << " - " << A.nombre << " - " << A.apellidos << " - " << A.carrera << "\n";
 

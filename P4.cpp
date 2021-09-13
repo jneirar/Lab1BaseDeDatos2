@@ -52,7 +52,7 @@ class VariableRecord{
             vector<Matricula> matriculas;
             int n = numRecords(this->fileCabecera);
             cout << "Hay " << n-1 << " registros\n";
-            for(int i=0; i<n-1; i++){
+            for(int i=1; i<=n-1; i++){
                 matricula = readRecord(i);
                 matriculas.push_back(matricula);
             }
@@ -134,9 +134,9 @@ int main()
 
     variableRecord.add(m);
 
-    /*cout << "\n------------Test readRecord 1--------------\n";
+    cout << "\n------------Test readRecord 1--------------\n";
     Matricula m2 = variableRecord.readRecord(1);
-    printMatricula(m1);*/
+    printMatricula(m2);
     
     cout << "\n------------Test readRecord 2--------------\n";
     Matricula m1 = variableRecord.readRecord(2);

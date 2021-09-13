@@ -23,23 +23,35 @@ struct Matricula{
 };
 
 void printMatricula(Matricula &matricula){
-    cout << matricula.codigo << "\n";
-    cout << matricula.ciclo << "\n";
-    cout << fixed << setprecision(2) << matricula.mensualidad << "\n";
-    cout << matricula.observaciones << "\n\n";
+    cout << matricula.codigo << "|";
+    cout << matricula.ciclo << "|";
+    cout << fixed << setprecision(2) << matricula.mensualidad << "|";
+    cout << matricula.observaciones << "|\n";
+}
+istream & operator >> (istream & stream, Matricula & p)
+{	
+	stream.read((char*) &p, sizeof(p));
+	stream.seekg(sizeof(p));
+	return stream;
 }
 
+ostream & operator << (ostream & stream, Matricula & p)
+{	
+	stream.write((char*) &p , sizeof(p));
+	return stream;
+}
 class VariableRecord{
 	public:
-		VariableRecord(string fileName, string metaData){
-			this->fileName = fileName;
-            this->metaData = metaData;
+		VariableRecord(string fileDatos, string fileCabecera){
+			this->fileDatos = fileDatos;
+            this->fileCabecera = fileCabecera;
 		}
 
 		vector<Matricula>  load(){
             Matricula matricula;
             vector<Matricula> matriculas;
-            int n = numRecords(this->metaData);
+            int n = numRecords(this->fileCabecera);
+            cout << "Hay " << n-1 << " registros\n";
             for(int i=0; i<n-1; i++){
                 matricula = readRecord(i);
                 matriculas.push_back(matricula);
@@ -49,62 +61,44 @@ class VariableRecord{
 
 		void add(Matricula matricula){
             int pos = 0;
-            inFile.open(this->metaData, ios::in | ios::binary);
-            //Si está vacío guarda 0
-            if(inFile.peek() == ifstream::traits_type::eof()){
-                inFile.close();
-                outFile.open(this->metaData, ios::in | ios::binary);
-                outFile.write((char*) &pos, sizeof(pos));
-                outFile.close();
-            }else
-                inFile.close();
-            
-            //Lee la última posición
-            int n = numRecords(this->metaData);
-            int lastPos;
-            inFile.open(this->metaData, ios::in | ios::binary);
-            inFile.seekg((sizeof(lastPos))*(n-1), ios::beg);
-            inFile.read((char*) &lastPos, sizeof(lastPos));
-            inFile.close();
-            
-            //Suma la última posición con el tamaño del registro a guardar
-            //y se guarda como última posición
-            outFile.open(this->metaData, ios::app | ios::binary);
-            pos = sizeof(matricula) + lastPos;
-            outFile.write((char*) &pos, sizeof(pos));
-            outFile.close();
+            file.open(fileCabecera, ios::in | ios::out | ios::binary);
+            file.seekg(-sizeof(pos), ios::end);
+            //pos guarda la última posición
+            file.read((char*) &pos, sizeof(pos));
+            //Guardo la posición siguiente
+            int posNew = pos + sizeof(matricula);
 
-            //Guardo el registro
-            outFile.open(this->fileName, ios::app | ios::binary);
-			outFile.write((char*) &matricula, sizeof(matricula));
-            outFile.close();
-            
+            file.seekg(0, ios::end);
+            file.write((char*) &posNew, sizeof(posNew));
+            file.close();
+
+            file.open(fileDatos, ios::app | ios::binary);
+            file.write((char*) &matricula, sizeof(matricula));
+            file.close();
 		}
 
 		Matricula readRecord(int pos){
-            Matricula temp;
-			int posFisica, posFisicaNext;
-            inFile.open(this->metaData, ios::in | ios::binary);
-            inFile.seekg(sizeof(int)*pos, ios::beg);
-            inFile.read((char*) &posFisica, sizeof(posFisica));
-            
-            inFile.seekg(sizeof(int)*(pos+1), ios::beg);
-            inFile.read((char*) &posFisicaNext, sizeof(posFisicaNext));
+            int posFisica;
+            int posFisicaNext;
+            file.open(fileCabecera, ios::in | ios::binary);
+            file.seekg((pos-1)*(sizeof(pos)), ios::beg);
+            file.read((char*) &posFisica, sizeof(posFisica));
+            file.seekg((pos)*(sizeof(pos)), ios::beg);
+            file.read((char*) &posFisicaNext, sizeof(posFisicaNext));
+            file.close();
 
-            inFile.close();
-            
-            inFile.open(this->fileName, ios::in | ios::binary);            
-            inFile.seekg(posFisica, ios::beg);
-            inFile.read((char*) &temp, posFisicaNext - posFisica);
-            inFile.close();
+            Matricula temp;
+            file.open(fileDatos, ios::in | ios::binary);
+            file.seekg(posFisica, ios::beg);
+            file.read((char*) &temp, posFisicaNext - posFisica);
+            file.close();
             
 			return temp;
 		}
 	private:
-		ofstream outFile;
-		ifstream inFile;
-		string fileName;
-        string metaData;
+		fstream file;
+		string fileDatos;
+        string fileCabecera;
 };
 
 int main()
@@ -115,6 +109,11 @@ int main()
     ofs.close();
     ofs.open("cabecera.dat", ofstream::out | ofstream::trunc);
     ofs.close();
+    fstream f;
+    int i = 0;
+    f.open("cabecera.dat", ios::in | ios::out | ios::binary);
+    f.write((char*) &i, sizeof(i));
+    f.close();
 
     cout << "\n------------Test add--------------\n";
 	VariableRecord variableRecord("datos.txt", "cabecera.dat");
@@ -123,26 +122,30 @@ int main()
     m.ciclo = 2;
     m.mensualidad = 1500.50;
     m.observaciones = "Alumno 1";
+    printMatricula(m);
+
     variableRecord.add(m);
 
-    m.codigo = "0004";
-    m.ciclo = 6;
-    m.mensualidad = 2100.50;
+    m.codigo = "0005";
+    m.ciclo = 5;
+    m.mensualidad = 2300.50;
     m.observaciones = "Alumno 2";
+    printMatricula(m);
+
     variableRecord.add(m);
 
+    /*cout << "\n------------Test readRecord 1--------------\n";
+    Matricula m2 = variableRecord.readRecord(1);
+    printMatricula(m1);*/
     
+    cout << "\n------------Test readRecord 2--------------\n";
+    Matricula m1 = variableRecord.readRecord(2);
+    printMatricula(m1);
+
     cout << "\n------------Test load--------------\n";
-    //auto tmp = variableRecord.load();
-    //cout << tmp.size() << "\n";
-    //for(auto mat : tmp)
-    //    printMatricula(mat);
-    cout << "\n------------Test readRecord--------------\n";
-    Matricula mat;
-    mat = variableRecord.readRecord(1);   
-    printMatricula(mat);
-    //auto mat1 = variableRecord.readRecord(1);
-    //printMatricula(mat1);
-    
+    auto tmp = variableRecord.load();
+    cout << tmp.size() << "\n";
+    for(auto mat : tmp)
+        printMatricula(mat);
 	return 0;
 }
